@@ -295,23 +295,37 @@ def camera_func():
         st.write("Please position the barcode in front of your phone's camera.")
         
         # Capture camera input
-        camera_image = st.camera_input("Scan QR code or barcode", label_visibility="visible")
-        
-        if camera_image is not None:
-            st.write("pic taken")
-            gray = cv2.cvtColor(camera_image, cv2.COLOR_RGB2GRAY)
+        cap = cv2.VideoCapture(0)
+
+        if not cap.isOpened():
+            st.error("Error: Unable to access the camera.")
+            return None
+
+        stop_scanning = st.button("Stop Scanning")
+
+        camera_placeholder = st.empty()
+
+        while not stop_scanning:
+            ret, frame = cap.read()
+
+            if not ret:
+                st.error("Error: Failed to capture frame from the camera.")
+                break
+
+            # Convert the frame to grayscale for barcode detection
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+            # Decode barcodes
             decoded_objects = decode(gray)
 
             if decoded_objects:
                 scanned_data = decoded_objects[0].data.decode("utf-8")
+                cap.release()
                 return scanned_data
-            else:
-                st.info("No QR code or barcode detected.")
-        
-        # Add a stop scanning button
-        stop_scanning = st.button("Stop Scanning")
-        if stop_scanning:
-            return None
+
+            camera_placeholder.image(frame, channels="BGR", use_column_width=True)
+
+        cap.release()
 
     return None
 
