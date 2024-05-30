@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from PIL import Image, ImageEnhance
-import torch
 import cv2
+import torch
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 from paddleocr import PaddleOCR
 from shapely.geometry import Polygon, Point
@@ -83,12 +83,6 @@ def retrieve_dataframe_from_sqlite(table_name):
     cursor.close()
     return df
 
-def get_saved_databases(directory="C:/Users/willi/"):
-    # List all files in the specified directory
-    files = os.listdir(directory)
-    # Filter for files with a .db extension
-    databases = [file for file in files if file.endswith('.db')]
-    return databases
 
 # Function to apply Excel-like formula to DataFrame
 def apply_formula_to_dataframe(df, formula):
@@ -366,8 +360,7 @@ def main():
     table_names = [row[0] for row in cursor.fetchall()]
     cursor.close()
     
-    # Get list of saved databases
-    saved_databases = get_saved_databases()
+
     if operation == "Home":
         st.title("Table Extraction with OCR")
 
