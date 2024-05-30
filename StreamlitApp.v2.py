@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 from PIL import Image, ImageEnhance
 import torch
+import cv2
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 from paddleocr import PaddleOCR
 from shapely.geometry import Polygon, Point
