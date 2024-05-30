@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from PIL import Image, ImageEnhance
-import cv2
 import torch
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 from paddleocr import PaddleOCR
