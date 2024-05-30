@@ -292,60 +292,28 @@ def barcode_decode(frame):
 
 def camera_func():
     if st.button("Scan"):
-        st.write("Please position the barcode in front of your phone's camera.")
+        st.write("Please position the barcode or QR code in front of your camera.")
         
-        # Embed html5-qrcode script and initialize it
-        st.markdown("""
-            <div id="reader" style="width: 500px;"></div>
-            <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-            <script>
-                function onScanSuccess(decodedText, decodedResult) {
-                    // Handle the result here
-                    document.getElementById('scanned-data').innerText = decodedText;
-                    // Send the scanned data back to the Streamlit server using fetch
-                    fetch('/?scanned_data=' + encodeURIComponent(decodedText), {
-                        method: 'GET'
-                    });
-                }
-
-                function onScanFailure(error) {
-                    // handle scan failure, usually better to ignore and keep scanning.
-                    console.warn(`Code scan error = ${error}`);
-                }
-
-                let html5QrcodeScanner = new Html5QrcodeScanner(
-                    "reader", { fps: 10, qrbox: 250 });
-
-                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-            </script>
-        """, unsafe_allow_html=True)
+        # Capture camera input
+        camera_image = st.camera_input(width=500)
         
-        stop_scanning = st.button("Stop Scanning")
+        if camera_image is not None:
+            # Display the captured image
+            st.image(camera_image, use_column_width=True)
+            
+            # Scan QR code and barcode
+            result = scan_qr_code_and_barcode(camera_image)
+            if result:
+                st.success(f"Scanned data: {result}")
+            else:
+                st.info("No QR code or barcode detected.")
 
-        if stop_scanning:
-            st.markdown("""
-                <script>
-                    if (html5QrcodeScanner) {
-                        html5QrcodeScanner.clear();
-                    }
-                </script>
-            """, unsafe_allow_html=True)
-        
-        scanned_data_placeholder = st.empty()
+    # Add a stop scanning button
+    stop_scanning = st.button("Stop Scanning")
+    if stop_scanning:
+        st.stop()
 
-        # JavaScript will update this element with the scanned data
-        st.markdown("""
-            <div id="scanned-data"></div>
-        """, unsafe_allow_html=True)
-
-    # Capture scanned data from the query parameters
-    query_params = st.query_params
-    scanned_data = query_params.get('scanned_data')
-    if scanned_data:
-        return scanned_data[0]
-
-    return None
-
+camera_func()
 
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
