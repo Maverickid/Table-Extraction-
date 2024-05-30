@@ -313,8 +313,6 @@ def camera_func():
     if stop_scanning:
         st.stop()
 
-camera_func()
-
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
                 
