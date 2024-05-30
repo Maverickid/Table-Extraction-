@@ -289,17 +289,30 @@ def barcode_decode(frame):
     decoded_objects = decode(frame)
     return decoded_objects
 
-
 def camera_func():
+    # Create or get the SessionState
+    session_state = st.session_state
+    if 'scan_button_clicked' not in session_state:
+        session_state.scan_button_clicked = False
+
+    
     if st.button("Scan"):
+        session_state.scan_button_clicked = True
         st.write("Please position the barcode in front of your phone's camera.")
-        
+            
+    if session_state.scan_button_clicked:
         # Capture camera input
-        camera_image = st.camera_input("Scan QR code or barcode", label_visibility="visible")
+        uploaded_image = st.camera_input("Scan QR code or barcode", label_visibility="visible")
         
-        if camera_image is not None:
-            st.image(camera_image)
-            gray = cv2.cvtColor(camera_image, cv2.COLOR_RGB2GRAY)
+        if uploaded_image is not None:
+            # Convert uploaded image to NumPy array
+            pil_image = Image.open(uploaded_image)
+            numpy_image = np.array(pil_image)
+
+            st.image(numpy_image, use_column_width=True)
+
+            # Convert to grayscale
+            gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
             decoded_objects = decode(gray)
 
             if decoded_objects:
@@ -307,11 +320,11 @@ def camera_func():
                 return scanned_data
             else:
                 st.info("No QR code or barcode detected.")
-        
-        # Add a stop scanning button
+            
+            # Add a stop scanning button
         stop_scanning = st.button("Stop Scanning")
         if stop_scanning:
-            return None
+            session_state.scan_button_clicked = False
 
     return None
     
