@@ -295,39 +295,44 @@ def camera_func():
     if 'scan_button_clicked' not in session_state:
         session_state.scan_button_clicked = False
 
-    
     if st.button("Scan"):
         session_state.scan_button_clicked = True
         st.write("Please position the barcode in front of your phone's camera.")
             
     if session_state.scan_button_clicked:
         # Capture camera input
-        uploaded_image = st.camera_input("Scan QR code or barcode", label_visibility="visible")
+        uploaded_image = st.camera_input("Scan QR code or barcode")
         
         if uploaded_image is not None:
             # Convert uploaded image to NumPy array
             pil_image = Image.open(uploaded_image)
             numpy_image = np.array(pil_image)
 
+            # Display the image
             st.image(numpy_image, use_column_width=True)
 
-            # Convert to grayscale
-            gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
-            decoded_objects = decode(gray)
-
-            if decoded_objects:
-                scanned_data = decoded_objects[0].data.decode("utf-8")
-                return scanned_data
-            else:
-                st.info("No QR code or barcode detected.")
+            # Initialize the barcode detector
+            bd = cv2.barcode.BarcodeDetector()
             
-            # Add a stop scanning button
+            # Detect and decode the barcode
+            ok, decoded_info, _, _ = bd.detectAndDecode(numpy_image)
+
+            if ok:
+                if decoded_info:
+                    scanned_data = decoded_info[0]
+                    return scanned_data
+                else:
+                    return "No QR code or barcode detected."
+            else:
+                return "No QR code or barcode detected."
+            
+        # Add a stop scanning button
         stop_scanning = st.button("Stop Scanning")
         if stop_scanning:
             session_state.scan_button_clicked = False
 
     return None
-    
+
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
                 
