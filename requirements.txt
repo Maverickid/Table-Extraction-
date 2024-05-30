@@ -1,10 +1,13 @@
-numpy version: 1.24.3
-pandas version: 2.0.3
-streamlit version: 1.35.0
-Pillow version: 10.2.0
-opencv-python version: 4.6.0
-torch version: 1.13.1+cu117
-transformers version: transformers
-PaddleOCR version: paddleocr
-shapely version: shapely
-pyzbar version: pyzbar
+numpy==1.24.3
+pandas==2.0.3
+streamlit==1.35.0
+Pillow==10.2.0
+opencv-python==4.6.0
+torch==1.13.1+cu117
+transformers==4.33.3 
+paddleocr== 2.7.3  
+shapely==2.0.3  
+pyzbar==0.1.9 
+tqdm==4.65.0
+huggingface-hub==0.22.2
+
