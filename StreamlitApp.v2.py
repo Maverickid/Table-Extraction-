@@ -292,26 +292,28 @@ def barcode_decode(frame):
 
 def camera_func():
     if st.button("Scan"):
-        st.write("Please position the barcode or QR code in front of your camera.")
+        st.write("Please position the barcode in front of your phone's camera.")
         
         # Capture camera input
-        camera_image = st.camera_input(width=500)
+        camera_image = st.camera_input("Scan QR code or barcode", label_visibility="visible")
         
         if camera_image is not None:
-            # Display the captured image
-            st.image(camera_image, use_column_width=True)
-            
-            # Scan QR code and barcode
-            result = scan_qr_code_and_barcode(camera_image)
-            if result:
-                st.success(f"Scanned data: {result}")
+            st.write("pic taken")
+            gray = cv2.cvtColor(camera_image, cv2.COLOR_RGB2GRAY)
+            decoded_objects = decode(gray)
+
+            if decoded_objects:
+                scanned_data = decoded_objects[0].data.decode("utf-8")
+                return scanned_data
             else:
                 st.info("No QR code or barcode detected.")
+        
+        # Add a stop scanning button
+        stop_scanning = st.button("Stop Scanning")
+        if stop_scanning:
+            return None
 
-    # Add a stop scanning button
-    stop_scanning = st.button("Stop Scanning")
-    if stop_scanning:
-        st.stop()
+    return None
 
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
