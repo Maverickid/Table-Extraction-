@@ -423,7 +423,7 @@ def extract_barcode_data(image):
     # Use OpenCV's barcode detector
     barcode_detector = cv2.barcode_BarcodeDetector()
     ok, decoded_info, decoded_type = barcode_detector.detectAndDecode(image)
-    
+    st.write(ok, decoded_info, decoded_type)
     if ok and decoded_info:
         return decoded_info[0]  # Return the first decoded barcode data
     
