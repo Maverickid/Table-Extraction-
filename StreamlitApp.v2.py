@@ -455,6 +455,7 @@ def camera_func():
 
 
             barcode_data = extract_barcode_data(gray)
+            st.write(barcode_data)
             if barcode_data:
                 st.success(f"Barcode Data: {barcode_data}")
                 session_state.scan_button_clicked = False
