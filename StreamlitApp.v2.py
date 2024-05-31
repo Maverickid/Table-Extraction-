@@ -450,8 +450,12 @@ def camera_func():
             pil_image = Image.open(uploaded_image)
             numpy_image = np.array(pil_image)
 
+            st.image(pil_image, use_column_width = True)
+            st.image(numpy_image, use_column_width = True)
+
             # Convert to grayscale
             gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
+            st.image(gray, use_column_width = True)
             decoded_objects = decode(gray)
             st.write(decoded_objects)
 
