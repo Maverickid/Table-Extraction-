@@ -424,13 +424,21 @@ def extract_barcode_data(image):
 
     # Use OpenCV's QR code detector
     qr_detector = cv2.QRCodeDetector()
-    data, bbox, straight_qrcode = qr_detector.detectAndDecode(image)
-    st.write(f"QR Code Detection: Data: {data}, BBox: {bbox}, Straight QRCode: {straight_qrcode}")
+    data, bbox, _ = qr_detector.detectAndDecode(image)
+    st.write(f"QR Code Detection: Data: {data}, BBox: {bbox}")
 
     if data:
         return data  # Return the QR code data
     
-    # Fallback to pyzbar for barcode detection
+    # Use OpenCV's barcode detector
+    barcode_detector = cv2.barcode_BarcodeDetector()
+    retval, decoded_info, decoded_type = barcode_detector.detectAndDecode(image)
+    st.write(f"Barcode Detection: Retval: {retval}, Decoded Info: {decoded_info}, Decoded Type: {decoded_type}")
+
+    if retval:
+        return decoded_info[0] if decoded_info else None
+    
+    # Fallback to pyzbar for additional barcode detection
     decoded_objects = decode(image)
     st.write(f"Decoded Objects (pyzbar): {decoded_objects}")
     
@@ -459,6 +467,10 @@ def camera_func():
             pil_image = Image.open(uploaded_image)
             numpy_image = np.array(pil_image)
 
+            # Ensure the image is in RGB format
+            if len(numpy_image.shape) == 2 or numpy_image.shape[2] == 1:  # If grayscale, convert to RGB
+                numpy_image = cv2.cvtColor(numpy_image, cv2.COLOR_GRAY2RGB)
+
             # Convert to grayscale
             gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
             st.image(gray, use_column_width=True, caption="Grayscale Image")
@@ -479,7 +491,7 @@ def camera_func():
             session_state.scan_button_clicked = False
 
     return None
-
+    
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
                 
