@@ -401,7 +401,7 @@ def detect_and_crop_barcode(image):
             st.image(cropped_image, caption="Cropped Image for Barcode Detection")
             
             # Attempt to decode cropped region using pyzbar
-            decoded_objects = decode(cropped_image)
+            decoded_objects = decode(gray)
             if decoded_objects:
                 barcode_data = decoded_objects[0].data.decode("utf-8")
                 return barcode_data
