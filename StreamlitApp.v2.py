@@ -394,40 +394,77 @@ def barcode_decode(frame):
 
 #     return None
 
+# def camera_func():
+#     session_state = st.session_state
+#     if 'scan_button_clicked' not in session_state:
+#         session_state.scan_button_clicked = False
+
+#     if st.button("Scan"):
+#         session_state.scan_button_clicked = True
+#         st.write("Please position the barcode in front of your camera.")
+        
+#         # Start video capture
+#         cap = cv2.VideoCapture(0)
+#         camera_placeholder = st.empty()
+
+#         while session_state.scan_button_clicked:
+#             ret, frame = cap.read()
+#             if not ret:
+#                 st.error("Failed to capture image from camera.")
+#                 break
+            
+#             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#             decoded_objects = decode(gray)
+
+#             if decoded_objects:
+#                 scanned_data = decoded_objects[0].data.decode("utf-8")
+#                 cap.release()
+#                 session_state.scan_button_clicked = False
+#                 return scanned_data
+
+#             camera_placeholder.image(frame, channels="BGR")
+
+#         cap.release()
+
+#     if st.button("Stop Scanning"):
+#         session_state.scan_button_clicked = False
+
+#     return None
+
 def camera_func():
+    # Create or get the SessionState
     session_state = st.session_state
     if 'scan_button_clicked' not in session_state:
         session_state.scan_button_clicked = False
 
     if st.button("Scan"):
         session_state.scan_button_clicked = True
-        st.write("Please position the barcode in front of your camera.")
-        
-        # Start video capture
-        cap = cv2.VideoCapture(0)
-        camera_placeholder = st.empty()
-
-        while session_state.scan_button_clicked:
-            ret, frame = cap.read()
-            if not ret:
-                st.error("Failed to capture image from camera.")
-                break
+        st.write("Please position the barcode in front of your phone's camera.")
             
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    if session_state.scan_button_clicked:
+        # Capture camera input
+        uploaded_image = st.camera_input("Scan QR code or barcode")
+        
+        if uploaded_image is not None:
+            # Convert uploaded image to NumPy array
+            pil_image = Image.open(uploaded_image)
+            numpy_image = np.array(pil_image)
+
+            # Convert to grayscale
+            gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
             decoded_objects = decode(gray)
 
             if decoded_objects:
                 scanned_data = decoded_objects[0].data.decode("utf-8")
-                cap.release()
                 session_state.scan_button_clicked = False
                 return scanned_data
+            else:
+                st.info("No QR code or barcode detected.")
+                session_state.scan_button_clicked = False
 
-            camera_placeholder.image(frame, channels="BGR")
-
-        cap.release()
-
-    if st.button("Stop Scanning"):
-        session_state.scan_button_clicked = False
+        stop_scanning = st.button("Stop Scanning")
+        if stop_scanning:
+            session_state.scan_button_clicked = False
 
     return None
 
