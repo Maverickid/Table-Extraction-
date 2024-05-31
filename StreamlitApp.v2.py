@@ -335,64 +335,102 @@ def barcode_decode(frame):
 
 #     return None
 
-class BarcodeScanner(VideoProcessorBase):
-    def __init__(self):
-        self.decoded_info = None
+# class BarcodeScanner(VideoProcessorBase):
+#     def __init__(self):
+#         self.decoded_info = None
 
-    def recv(self, frame):
-        img = frame.to_ndarray(format="bgr24")
+#     def recv(self, frame):
+#         img = frame.to_ndarray(format="bgr24")
         
-        # Convert to grayscale for better decoding
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#         # Convert to grayscale for better decoding
+#         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        # Detect and decode the barcode
-        decoded_objects = decode(gray)
+#         # Detect and decode the barcode
+#         decoded_objects = decode(gray)
         
-        if decoded_objects:
-            self.decoded_info = decoded_objects[0].data.decode("utf-8")
-            # Draw the detected barcode on the frame
-            for obj in decoded_objects:
-                points = obj.polygon
-                if len(points) > 4:
-                    hull = cv2.convexHull(np.array([point for point in points], dtype=np.float32))
-                    hull = list(map(tuple, np.squeeze(hull)))
-                else:
-                    hull = points
+#         if decoded_objects:
+#             self.decoded_info = decoded_objects[0].data.decode("utf-8")
+#             # Draw the detected barcode on the frame
+#             for obj in decoded_objects:
+#                 points = obj.polygon
+#                 if len(points) > 4:
+#                     hull = cv2.convexHull(np.array([point for point in points], dtype=np.float32))
+#                     hull = list(map(tuple, np.squeeze(hull)))
+#                 else:
+#                     hull = points
 
-                n = len(hull)
-                for j in range(0, n):
-                    cv2.line(img, hull[j], hull[(j+1) % n], (0, 255, 0), 3)
+#                 n = len(hull)
+#                 for j in range(0, n):
+#                     cv2.line(img, hull[j], hull[(j+1) % n], (0, 255, 0), 3)
         
-        return av.VideoFrame.from_ndarray(img, format="bgr24")
+#         return av.VideoFrame.from_ndarray(img, format="bgr24")
+
+# def camera_func():
+#     st.write("Please position the barcode in front of your camera.")
+    
+#     # WebRTC Configuration
+#     rtc_configuration = RTCConfiguration(
+#         {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+#     )
+
+#     # Start the WebRTC stream
+#     webrtc_ctx = webrtc_streamer(
+#         key="barcode-scanner",
+#         mode=WebRtcMode.SENDRECV,
+#         rtc_configuration=rtc_configuration,
+#         video_processor_factory=BarcodeScanner,
+#         media_stream_constraints={"video": True, "audio": False},
+#     )
+
+#     # Add a stop scanning button
+#     stop_scanning = st.button("Stop Scanning")
+
+#     if webrtc_ctx.video_processor:
+#         if webrtc_ctx.video_processor.decoded_info:
+#             return webrtc_ctx.video_processor.decoded_info
+#         elif stop_scanning:
+#             webrtc_ctx.video_processor.decoded_info = None
+#             st.write("Scanning stopped.")
+
+#     return None
 
 def camera_func():
-    st.write("Please position the barcode in front of your camera.")
-    
-    # WebRTC Configuration
-    rtc_configuration = RTCConfiguration(
-        {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
-    )
+    session_state = st.session_state
+    if 'scan_button_clicked' not in session_state:
+        session_state.scan_button_clicked = False
 
-    # Start the WebRTC stream
-    webrtc_ctx = webrtc_streamer(
-        key="barcode-scanner",
-        mode=WebRtcMode.SENDRECV,
-        rtc_configuration=rtc_configuration,
-        video_processor_factory=BarcodeScanner,
-        media_stream_constraints={"video": True, "audio": False},
-    )
+    if st.button("Scan"):
+        session_state.scan_button_clicked = True
+        st.write("Please position the barcode in front of your camera.")
+        
+        # Start video capture
+        cap = cv2.VideoCapture(0)
+        camera_placeholder = st.empty()
 
-    # Add a stop scanning button
-    stop_scanning = st.button("Stop Scanning")
+        while session_state.scan_button_clicked:
+            ret, frame = cap.read()
+            if not ret:
+                st.error("Failed to capture image from camera.")
+                break
+            
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            decoded_objects = decode(gray)
 
-    if webrtc_ctx.video_processor:
-        if webrtc_ctx.video_processor.decoded_info:
-            return webrtc_ctx.video_processor.decoded_info
-        elif stop_scanning:
-            webrtc_ctx.video_processor.decoded_info = None
-            st.write("Scanning stopped.")
+            if decoded_objects:
+                scanned_data = decoded_objects[0].data.decode("utf-8")
+                cap.release()
+                session_state.scan_button_clicked = False
+                return scanned_data
+
+            camera_placeholder.image(frame, channels="BGR")
+
+        cap.release()
+
+    if st.button("Stop Scanning"):
+        session_state.scan_button_clicked = False
 
     return None
+
 
 
 def main():
