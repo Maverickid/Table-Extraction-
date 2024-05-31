@@ -453,6 +453,7 @@ def camera_func():
             # Convert to grayscale
             gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
             decoded_objects = decode(gray)
+            st.write(decode_objects)
 
             if decoded_objects:
                 scanned_data = decoded_objects[0].data.decode("utf-8")
