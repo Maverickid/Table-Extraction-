@@ -421,7 +421,7 @@ def check_databases(df, scanned_data, check_column="Any", display_column=None):
 
 def extract_barcode_data(image):
     # Use OpenCV's barcode detector
-    barcode_detector = cv2.barcode_BarcodeDetector()
+    barcode_detector = cv2.barcode.BarcodeDetector()
     ok, decoded_info, decoded_type = barcode_detector.detectAndDecode(image)
     st.image(image)
     st.write(barcode_detector)
