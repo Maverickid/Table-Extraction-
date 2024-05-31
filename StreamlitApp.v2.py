@@ -430,7 +430,6 @@ def extract_barcode_data(image):
     return None
 
 def camera_func():
-
     # Create or get the SessionState
     session_state = st.session_state
     if 'scan_button_clicked' not in session_state:
@@ -445,17 +444,15 @@ def camera_func():
         uploaded_image = st.camera_input("Scan QR code or barcode")
         
         if uploaded_image is not None:
-            # Convert uploaded image to PIL image and NumPy array
-            pil_image = cv2.imread(uploaded_image)
-            numpy_image = np.array(pil_image)
+            # Convert uploaded image to NumPy array
+            numpy_image = cv2.imdecode(np.frombuffer(uploaded_image.read(), np.uint8), cv2.IMREAD_COLOR)
 
-          # Resize image to a desired dimension
+            # Resize image to a desired dimension
             resized_image = cv2.resize(numpy_image, (480, 640))  # Adjust dimensions as needed
 
             # Convert to grayscale
             gray = cv2.cvtColor(resized_image, cv2.COLOR_RGB2GRAY)
             st.image(gray, use_column_width=True, caption="Grayscale Image")
-
 
             barcode_data = extract_barcode_data(gray)
             st.write(barcode_data)
@@ -466,8 +463,6 @@ def camera_func():
             else:
                 st.info("No QR code or barcode detected.")
                 session_state.scan_button_clicked = False
-                
-
 
         stop_scanning = st.button("Stop Scanning")
         if stop_scanning:
