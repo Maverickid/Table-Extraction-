@@ -484,7 +484,6 @@ def camera_func():
             decoded_objects = decode(gray)
             if decoded_objects:
                 scanned_data = decoded_objects[0].data.decode("utf-8")
-                st.success(f"Scanned Data: {scanned_data}")
                 session_state.scan_button_clicked = False
                 return scanned_data
             else:
