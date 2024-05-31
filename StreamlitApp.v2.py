@@ -337,21 +337,31 @@ def barcode_decode(frame):
 
 class BarcodeScanner(VideoProcessorBase):
     def __init__(self):
-        self.barcode_detector = cv2.barcode.BarcodeDetector()
         self.decoded_info = None
 
     def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
         
+        # Convert to grayscale for better decoding
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
         # Detect and decode the barcode
-        ok, decoded_info, _, _ = self.barcode_detector.detectAndDecode(img)
-
-        if ok and decoded_info:
-            self.decoded_info = decoded_info[0]
+        decoded_objects = decode(gray)
+        
+        if decoded_objects:
+            self.decoded_info = decoded_objects[0].data.decode("utf-8")
             # Draw the detected barcode on the frame
-            for box in _:
-                box = np.int0(box)
-                cv2.polylines(img, [box], True, (0, 255, 0), 2)
+            for obj in decoded_objects:
+                points = obj.polygon
+                if len(points) > 4:
+                    hull = cv2.convexHull(np.array([point for point in points], dtype=np.float32))
+                    hull = list(map(tuple, np.squeeze(hull)))
+                else:
+                    hull = points
+
+                n = len(hull)
+                for j in range(0, n):
+                    cv2.line(img, hull[j], hull[(j+1) % n], (0, 255, 0), 3)
         
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
@@ -372,11 +382,18 @@ def camera_func():
         media_stream_constraints={"video": True, "audio": False},
     )
 
+    # Add a stop scanning button
+    stop_scanning = st.button("Stop Scanning")
+
     if webrtc_ctx.video_processor:
         if webrtc_ctx.video_processor.decoded_info:
             return webrtc_ctx.video_processor.decoded_info
+        elif stop_scanning:
+            webrtc_ctx.video_processor.decoded_info = None
+            st.write("Scanning stopped.")
 
     return None
+
 
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
