@@ -11,6 +11,8 @@ import sqlite3
 import re
 from pyzbar.pyzbar import decode
 import os
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration,  WebRtcMode
+import av
 
 # Connect to the SQLite3 database
 conn = sqlite3.connect('database.db')
@@ -289,47 +291,90 @@ def barcode_decode(frame):
     decoded_objects = decode(frame)
     return decoded_objects
 
-def camera_func():
-    # Create or get the SessionState
-    session_state = st.session_state
-    if 'scan_button_clicked' not in session_state:
-        session_state.scan_button_clicked = False
+# def camera_func():
+#     # Create or get the SessionState
+#     session_state = st.session_state
+#     if 'scan_button_clicked' not in session_state:
+#         session_state.scan_button_clicked = False
 
-    if st.button("Scan"):
-        session_state.scan_button_clicked = True
-        st.write("Please position the barcode in front of your phone's camera.")
+#     if st.button("Scan"):
+#         session_state.scan_button_clicked = True
+#         st.write("Please position the barcode in front of your phone's camera.")
             
-    if session_state.scan_button_clicked:
-        # Capture camera input
-        uploaded_image = st.camera_input("Scan QR code or barcode")
+#     if session_state.scan_button_clicked:
+#         # Capture camera input
+#         uploaded_image = st.camera_input("Scan QR code or barcode")
         
-        if uploaded_image is not None:
-            # Convert uploaded image to NumPy array
-            pil_image = Image.open(uploaded_image)
-            numpy_image = np.array(pil_image)
+#         if uploaded_image is not None:
+#             # Convert uploaded image to NumPy array
+#             pil_image = Image.open(uploaded_image)
+#             numpy_image = np.array(pil_image)
 
-            # Display the image
-            st.image(numpy_image, use_column_width=True)
+#             # Display the image
+#             st.image(numpy_image, use_column_width=True)
 
-            # Initialize the barcode detector
-            bd = cv2.barcode.BarcodeDetector()
+#             # Initialize the barcode detector
+#             bd = cv2.barcode.BarcodeDetector()
             
-            # Detect and decode the barcode
-            ok, decoded_info, _, _ = bd.detectAndDecode(numpy_image)
+#             # Detect and decode the barcode
+#             ok, decoded_info, _, _ = bd.detectAndDecode(numpy_image)
 
-            if ok:
-                if decoded_info:
-                    scanned_data = decoded_info[0]
-                    return scanned_data
-                else:
-                    return "No QR code or barcode detected."
-            else:
-                return "No QR code or barcode detected."
+#             if ok:
+#                 if decoded_info:
+#                     scanned_data = decoded_info[0]
+#                     return scanned_data
+#                 else:
+#                     return "No QR code or barcode detected."
+#             else:
+#                 return "No QR code or barcode detected."
             
-        # Add a stop scanning button
-        stop_scanning = st.button("Stop Scanning")
-        if stop_scanning:
-            session_state.scan_button_clicked = False
+#         # Add a stop scanning button
+#         stop_scanning = st.button("Stop Scanning")
+#         if stop_scanning:
+#             session_state.scan_button_clicked = False
+
+#     return None
+
+class BarcodeScanner(VideoProcessorBase):
+    def __init__(self):
+        self.barcode_detector = cv2.barcode.BarcodeDetector()
+        self.decoded_info = None
+
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        
+        # Detect and decode the barcode
+        ok, decoded_info, _, _ = self.barcode_detector.detectAndDecode(img)
+
+        if ok and decoded_info:
+            self.decoded_info = decoded_info[0]
+            # Draw the detected barcode on the frame
+            for box in _:
+                box = np.int0(box)
+                cv2.polylines(img, [box], True, (0, 255, 0), 2)
+        
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
+
+def camera_func():
+    st.write("Please position the barcode in front of your camera.")
+    
+    # WebRTC Configuration
+    rtc_configuration = RTCConfiguration(
+        {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+    )
+
+    # Start the WebRTC stream
+    webrtc_ctx = webrtc_streamer(
+        key="barcode-scanner",
+        mode=WebRtcMode.SENDRECV,
+        rtc_configuration=rtc_configuration,
+        video_processor_factory=BarcodeScanner,
+        media_stream_constraints={"video": True, "audio": False},
+    )
+
+    if webrtc_ctx.video_processor:
+        if webrtc_ctx.video_processor.decoded_info:
+            return webrtc_ctx.video_processor.decoded_info
 
     return None
 
