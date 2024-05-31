@@ -384,6 +384,8 @@ def detect_and_crop_barcode(image):
 
     # Convert the image to grayscale and apply edge detection
     gray = cv2.cvtColor(sharpened_image, cv2.COLOR_BGR2GRAY)
+    resized_image = cv2.resize(gray, (128, 128))  # Adjust size based on your model
+    resized_image = resized_image / 255.0  # Normalize pixel values
     edged = cv2.Canny(gray, 50, 200)
 
     # Find contours in the edged image
@@ -401,7 +403,7 @@ def detect_and_crop_barcode(image):
             st.image(cropped_image, caption="Cropped Image for Barcode Detection")
             
             # Attempt to decode cropped region using pyzbar
-            decoded_objects = decode(gray)
+            decoded_objects = decode(resized_image)
             if decoded_objects:
                 barcode_data = decoded_objects[0].data.decode("utf-8")
                 return barcode_data
