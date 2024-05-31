@@ -449,8 +449,11 @@ def camera_func():
             pil_image = Image.open(uploaded_image)
             numpy_image = np.array(pil_image)
 
+          # Resize image to a desired dimension
+            resized_image = cv2.resize(numpy_image, (640, 480))  # Adjust dimensions as needed
+
             # Convert to grayscale
-            gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
+            gray = cv2.cvtColor(resized_image, cv2.COLOR_RGB2GRAY)
             st.image(gray, use_column_width=True, caption="Grayscale Image")
 
 
