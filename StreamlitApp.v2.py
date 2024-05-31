@@ -431,6 +431,81 @@ def barcode_decode(frame):
 
 #     return None
 
+# def camera_func():
+#     # Create or get the SessionState
+#     session_state = st.session_state
+#     if 'scan_button_clicked' not in session_state:
+#         session_state.scan_button_clicked = False
+
+#     if st.button("Scan"):
+#         session_state.scan_button_clicked = True
+#         st.write("Please position the barcode in front of your phone's camera.")
+            
+#     if session_state.scan_button_clicked:
+#         # Capture camera input
+#         uploaded_image = st.camera_input("Scan QR code or barcode")
+        
+#         if uploaded_image is not None:
+#             # Convert uploaded image to PIL image and NumPy array
+#             pil_image = Image.open(uploaded_image)
+#             numpy_image = np.array(pil_image)
+
+#             # Display the captured image
+#             st.image(pil_image, use_column_width=True)
+
+#             # Enhance the image
+#             enhancer = ImageEnhance.Contrast(pil_image)
+#             enhanced_image = enhancer.enhance(2)
+#             enhanced_numpy_image = np.array(enhanced_image)
+
+#             # Convert to grayscale
+#             gray = cv2.cvtColor(enhanced_numpy_image, cv2.COLOR_RGB2GRAY)
+#             st.image(gray, use_column_width=True, caption="Grayscale Image")
+
+#             # Apply thresholding
+#             _, thresholded_image = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+#             st.image(thresholded_image, use_column_width=True, caption="Thresholded Image")
+
+#             # Decode the barcode
+#             decoded_objects = decode(thresholded_image)
+#             st.write(decoded_objects)
+
+#             if decoded_objects:
+#                 scanned_data = decoded_objects[0].data.decode("utf-8")
+#                 session_state.scan_button_clicked = False
+#                 return scanned_data
+#             else:
+#                 st.info("No QR code or barcode detected.")
+#                 session_state.scan_button_clicked = False
+
+#         stop_scanning = st.button("Stop Scanning")
+#         if stop_scanning:
+#             session_state.scan_button_clicked = False
+
+#     return None
+
+def find_barcode(image):
+    # Convert image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+    # Apply thresholding
+    _, thresholded_image = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+
+    # Find contours in the thresholded image
+    contours, _ = cv2.findContours(thresholded_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Loop over the contours to find the barcode
+    for contour in contours:
+        # Approximate the contour
+        perimeter = cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
+
+        # If the contour has 4 vertices, it may be a barcode
+        if len(approx) == 4:
+            return approx
+
+    return None
+
 def camera_func():
     # Create or get the SessionState
     session_state = st.session_state
@@ -446,7 +521,7 @@ def camera_func():
         uploaded_image = st.camera_input("Scan QR code or barcode")
         
         if uploaded_image is not None:
-            # Convert uploaded image to PIL image and NumPy array
+            # Convert uploaded image to NumPy array
             pil_image = Image.open(uploaded_image)
             numpy_image = np.array(pil_image)
 
@@ -458,22 +533,13 @@ def camera_func():
             enhanced_image = enhancer.enhance(2)
             enhanced_numpy_image = np.array(enhanced_image)
 
-            # Convert to grayscale
-            gray = cv2.cvtColor(enhanced_numpy_image, cv2.COLOR_RGB2GRAY)
-            st.image(gray, use_column_width=True, caption="Grayscale Image")
+            # Find barcode
+            barcode_points = find_barcode(enhanced_numpy_image)
 
-            # Apply thresholding
-            _, thresholded_image = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
-            st.image(thresholded_image, use_column_width=True, caption="Thresholded Image")
-
-            # Decode the barcode
-            decoded_objects = decode(thresholded_image)
-            st.write(decoded_objects)
-
-            if decoded_objects:
-                scanned_data = decoded_objects[0].data.decode("utf-8")
+            if barcode_points is not None:
+                st.info("Barcode detected!")
                 session_state.scan_button_clicked = False
-                return scanned_data
+                return "Barcode detected"
             else:
                 st.info("No QR code or barcode detected.")
                 session_state.scan_button_clicked = False
@@ -483,7 +549,6 @@ def camera_func():
             session_state.scan_button_clicked = False
 
     return None
-
 
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
