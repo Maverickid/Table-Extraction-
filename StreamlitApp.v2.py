@@ -13,7 +13,7 @@ from pyzbar.pyzbar import decode
 import os
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration,  WebRtcMode
 import av
-from camera_input_live import camera_input_live
+
 
 # Connect to the SQLite3 database
 conn = sqlite3.connect('database.db')
@@ -442,7 +442,7 @@ def camera_func():
             
     if session_state.scan_button_clicked:
         # Capture camera input
-        uploaded_image = camera_input_live("Scan QR code or barcode", key="my_camera")
+        uploaded_image = st.camera_input("Scan QR code or barcode")
         
         if uploaded_image is not None:
             # Convert uploaded image to NumPy array
