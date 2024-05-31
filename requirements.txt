@@ -11,3 +11,4 @@ shapely==2.0.3
 pyzbar==0.1.9
 tqdm==4.65.0
 huggingface-hub==0.22.2
+streamlit-webrtc==0.47.7
