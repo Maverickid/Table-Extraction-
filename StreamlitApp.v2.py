@@ -418,9 +418,19 @@ def check_databases(df, scanned_data, check_column="Any", display_column=None):
 
 #     return None
 
+def extract_barcode_data(image):
+    # Use pyzbar to detect barcode's bounding box
+    decoded_objects = decode(image)
+    
+    # Extract the first detected barcode
+    if decoded_objects:
+        barcode_data = decoded_objects[0].data.decode("utf-8")
+        return barcode_data
+    
+    return None
+
 def camera_func():
 
-    from pyzbar.pyzbar import decode
     # Create or get the SessionState
     session_state = st.session_state
     if 'scan_button_clicked' not in session_state:
@@ -439,30 +449,21 @@ def camera_func():
             pil_image = Image.open(uploaded_image)
             numpy_image = np.array(pil_image)
 
-            # Display the captured image
-            st.image(pil_image, use_column_width=True)
-
-            # Enhance the image
-            enhancer = ImageEnhance.Contrast(pil_image)
-            enhanced_image = enhancer.enhance(2)
-            enhanced_numpy_image = np.array(enhanced_image)
-
             # Convert to grayscale
             gray = cv2.cvtColor(enhanced_numpy_image, cv2.COLOR_RGB2GRAY)
             st.image(gray, use_column_width=True, caption="Grayscale Image")
 
 
-            # Decode the barcode
-            decoded_objects = decode(gray)
-            st.write(decoded_objects)
-
-            if decoded_objects:
-                scanned_data = decoded_objects[0].data.decode("utf-8")
+            barcode_data = extract_barcode_data(camera_image)
+            if barcode_data:
+                st.success(f"Barcode Data: {barcode_data}")
                 session_state.scan_button_clicked = False
-                return scanned_data
+                return barcode_data
             else:
                 st.info("No QR code or barcode detected.")
                 session_state.scan_button_clicked = False
+                
+
 
         stop_scanning = st.button("Stop Scanning")
         if stop_scanning:
