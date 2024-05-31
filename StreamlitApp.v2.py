@@ -446,7 +446,7 @@ def camera_func():
         
         if uploaded_image is not None:
             # Convert uploaded image to PIL image and NumPy array
-            pil_image = Image.open(uploaded_image)
+            pil_image = cv2.imread(uploaded_image)
             numpy_image = np.array(pil_image)
 
           # Resize image to a desired dimension
