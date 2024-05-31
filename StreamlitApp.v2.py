@@ -459,7 +459,7 @@ def camera_func():
             gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
             # st.image(gray, use_column_width=True, caption="Grayscale Image")
 
-            barcode_data = extract_barcode_data(pil_image)
+            barcode_data = extract_barcode_data(gray)
             if barcode_data:
                 st.success(f"Barcode Data: {barcode_data}")
                 session_state.scan_button_clicked = False
