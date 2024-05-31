@@ -451,12 +451,9 @@ def camera_func():
             gray = cv2.cvtColor(enhanced_numpy_image, cv2.COLOR_RGB2GRAY)
             st.image(gray, use_column_width=True, caption="Grayscale Image")
 
-            # Apply thresholding
-            _, thresholded_image = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
-            st.image(thresholded_image, use_column_width=True, caption="Thresholded Image")
 
             # Decode the barcode
-            decoded_objects = decode(thresholded_image)
+            decoded_objects = decode(gray)
             st.write(decoded_objects)
 
             if decoded_objects:
