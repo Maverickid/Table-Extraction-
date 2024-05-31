@@ -352,63 +352,110 @@ def check_databases(df, scanned_data, check_column="Any", display_column=None):
 #             session_state.scan_button_clicked = False
 
 #     return None
+#------------------------
+# def sharpen_image(image):
+#     # Apply an unsharp mask to the image
+#     gaussian_blur = cv2.GaussianBlur(image, (0, 0), 3)
+#     sharpened = cv2.addWeighted(image, 1.5, gaussian_blur, -0.5, 0)
+#     return sharpened
 
-def sharpen_image(image):
-    # Apply an unsharp mask to the image
-    gaussian_blur = cv2.GaussianBlur(image, (0, 0), 3)
-    sharpened = cv2.addWeighted(image, 1.5, gaussian_blur, -0.5, 0)
-    return sharpened
-
-def extract_barcode_data(image):
-    # Use OpenCV's QR code detector as a fallback
-    qr_detector = cv2.QRCodeDetector()
-    data, bbox, _ = qr_detector.detectAndDecode(image)
+# def extract_barcode_data(image):
+#     # Use OpenCV's QR code detector as a fallback
+#     qr_detector = cv2.QRCodeDetector()
+#     data, bbox, _ = qr_detector.detectAndDecode(image)
     
-    if data:
-        return data  # Return the QR code data
+#     if data:
+#         return data  # Return the QR code data
     
-    return None
+#     return None
 
-def detect_qr_code(image):
-    qr_detector = cv2.QRCodeDetector()
-    data, bbox, _ = qr_detector.detectAndDecode(image)
-    st.write(f"QR Code Detection: Data: {data}, BBox: {bbox}")
-    return data, bbox
+# def detect_qr_code(image):
+#     qr_detector = cv2.QRCodeDetector()
+#     data, bbox, _ = qr_detector.detectAndDecode(image)
+#     st.write(f"QR Code Detection: Data: {data}, BBox: {bbox}")
+#     return data, bbox
 
-def detect_and_crop_barcode(image):
-    st.write("Detecting barcode using contours...")
+# def detect_and_crop_barcode(image):
+#     st.write("Detecting barcode using contours...")
 
-    # Sharpen the image
-    sharpened_image = sharpen_image(image)
-    st.image(sharpened_image, use_column_width=True, caption="Sharpened Image")
+#     # Sharpen the image
+#     sharpened_image = sharpen_image(image)
+#     st.image(sharpened_image, use_column_width=True, caption="Sharpened Image")
 
-    # Convert the image to grayscale and apply edge detection
-    gray = cv2.cvtColor(sharpened_image, cv2.COLOR_BGR2GRAY)
-    resized_image = cv2.resize(gray, (128, 128))  # Adjust size based on your model
-    resized_image = resized_image / 255.0  # Normalize pixel values
-    edged = cv2.Canny(gray, 50, 200)
+#     # Convert the image to grayscale and apply edge detection
+#     gray = cv2.cvtColor(sharpened_image, cv2.COLOR_BGR2GRAY)
+#     resized_image = cv2.resize(gray, (128, 128))  # Adjust size based on your model
+#     resized_image = resized_image / 255.0  # Normalize pixel values
+#     edged = cv2.Canny(gray, 50, 200)
 
-    # Find contours in the edged image
-    contours, _ = cv2.findContours(edged, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+#     # Find contours in the edged image
+#     contours, _ = cv2.findContours(edged, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
-    # Loop over the contours to find potential barcode regions
-    for contour in contours:
-        # Compute the bounding box of the contour and use it to draw the rectangle
-        x, y, w, h = cv2.boundingRect(contour)
-        aspect_ratio = w / float(h)
+#     # Loop over the contours to find potential barcode regions
+#     for contour in contours:
+#         # Compute the bounding box of the contour and use it to draw the rectangle
+#         x, y, w, h = cv2.boundingRect(contour)
+#         aspect_ratio = w / float(h)
         
-        # Assume a barcode has a rectangular shape with an aspect ratio between 2 and 6
-        if 2 <= aspect_ratio <= 6 and w > 100 and h > 20:  # Adjust width and height thresholds as needed
-            cropped_image = sharpened_image[y:y+h, x:x+w]
-            st.image(cropped_image, caption="Cropped Image for Barcode Detection")
+#         # Assume a barcode has a rectangular shape with an aspect ratio between 2 and 6
+#         if 2 <= aspect_ratio <= 6 and w > 100 and h > 20:  # Adjust width and height thresholds as needed
+#             cropped_image = sharpened_image[y:y+h, x:x+w]
+#             st.image(cropped_image, caption="Cropped Image for Barcode Detection")
             
-            # Attempt to decode cropped region using pyzbar
-            decoded_objects = decode(resized_image)
-            if decoded_objects:
-                barcode_data = decoded_objects[0].data.decode("utf-8")
-                return barcode_data
+#             # Attempt to decode cropped region using pyzbar
+#             decoded_objects = decode(resized_image)
+#             if decoded_objects:
+#                 barcode_data = decoded_objects[0].data.decode("utf-8")
+#                 return barcode_data
     
-    return None
+#     return None
+
+# def camera_func():
+#     # Create or get the SessionState
+#     session_state = st.session_state
+#     if 'scan_button_clicked' not in session_state:
+#         session_state.scan_button_clicked = False
+
+#     if st.button("Scan"):
+#         session_state.scan_button_clicked = True
+#         st.write("Please position the barcode in front of your phone's camera.")
+            
+#     if session_state.scan_button_clicked:
+#         # Capture camera input
+#         uploaded_image = st.camera_input("Scan QR code or barcode")
+        
+#         if uploaded_image is not None:
+#             # Convert uploaded image to NumPy array
+#             pil_image = Image.open(uploaded_image)
+#             numpy_image = np.array(pil_image)
+
+#             # Convert to grayscale
+#             gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
+#             st.image(gray, use_column_width=True, caption="Grayscale Image")
+
+#             # First, check for QR code
+#             qr_data, qr_bbox = detect_qr_code(gray)
+#             if qr_data:
+#                 st.success(f"QR Code Data: {qr_data}")
+#                 session_state.scan_button_clicked = False
+#                 return qr_data
+
+#             # If no QR code, check for barcode using contours
+#             barcode_data = detect_and_crop_barcode(numpy_image)
+#             if barcode_data:
+#                 st.success(f"Barcode Data: {barcode_data}")
+#                 session_state.scan_button_clicked = False
+#                 return barcode_data
+
+#             # If no QR code or barcode detected
+#             st.info("No QR code or barcode detected.")
+#             session_state.scan_button_clicked = False
+
+#         stop_scanning = st.button("Stop Scanning")
+#         if stop_scanning:
+#             session_state.scan_button_clicked = False
+
+#     return None
 
 def camera_func():
     # Create or get the SessionState
@@ -418,12 +465,12 @@ def camera_func():
 
     if st.button("Scan"):
         session_state.scan_button_clicked = True
-        st.write("Please position the barcode in front of your phone's camera.")
-            
+        st.write("Please upload an image of the barcode.")
+
     if session_state.scan_button_clicked:
-        # Capture camera input
-        uploaded_image = st.camera_input("Scan QR code or barcode")
-        
+        # Allow user to upload an image
+        uploaded_image = st.file_uploader("Upload Image", type=['png', 'jpg', 'jpeg'])
+
         if uploaded_image is not None:
             # Convert uploaded image to NumPy array
             pil_image = Image.open(uploaded_image)
@@ -433,23 +480,16 @@ def camera_func():
             gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
             st.image(gray, use_column_width=True, caption="Grayscale Image")
 
-            # First, check for QR code
-            qr_data, qr_bbox = detect_qr_code(gray)
-            if qr_data:
-                st.success(f"QR Code Data: {qr_data}")
+            # Decode barcode using pyzbar
+            decoded_objects = decode(gray)
+            if decoded_objects:
+                scanned_data = decoded_objects[0].data.decode("utf-8")
+                st.success(f"Scanned Data: {scanned_data}")
                 session_state.scan_button_clicked = False
-                return qr_data
-
-            # If no QR code, check for barcode using contours
-            barcode_data = detect_and_crop_barcode(numpy_image)
-            if barcode_data:
-                st.success(f"Barcode Data: {barcode_data}")
+                return scanned_data
+            else:
+                st.info("No barcode detected in the uploaded image.")
                 session_state.scan_button_clicked = False
-                return barcode_data
-
-            # If no QR code or barcode detected
-            st.info("No QR code or barcode detected.")
-            session_state.scan_button_clicked = False
 
         stop_scanning = st.button("Stop Scanning")
         if stop_scanning:
