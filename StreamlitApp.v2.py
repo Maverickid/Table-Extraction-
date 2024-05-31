@@ -195,7 +195,7 @@ def delete_table_from_sqlite(table_name):
     cursor.close()
 
 # Initialize PaddleOCR
-ocr = PaddleOCR(use_gpu=False, use_angle_cls=True, lang="en")
+ocr = PaddleOCR(use_gpu=False, use_angle_cls=True, lang="en",enable_mlkdnn=True)
 
 # Function to extract text within a polygon
 def extract_text_within_polygon(results, polygon, pad1=0, pad2=0, target_size=(200, 200)):
