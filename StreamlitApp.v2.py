@@ -441,17 +441,15 @@ def camera_func():
             
     if session_state.scan_button_clicked:
         # Capture camera input
-        uploaded_image = st.camera_input("Scan QR code or barcode")
+        uploaded_image = st.camera_input("Scan QR code or barcode", max_value=600)
         
         if uploaded_image is not None:
             # Convert uploaded image to NumPy array
-            numpy_image = cv2.imdecode(np.frombuffer(uploaded_image.read(), np.uint8), cv2.IMREAD_COLOR)
-
-            # Resize image to a desired dimension
-            resized_image = cv2.resize(numpy_image, (480, 640))  # Adjust dimensions as needed
+            pil_image = Image.open(uploaded_image)
+            numpy_image = np.array(pil_image)
 
             # Convert to grayscale
-            gray = cv2.cvtColor(resized_image, cv2.COLOR_RGB2GRAY)
+            gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
             st.image(gray, use_column_width=True, caption="Grayscale Image")
 
             barcode_data = extract_barcode_data(gray)
@@ -469,7 +467,6 @@ def camera_func():
             session_state.scan_button_clicked = False
 
     return None
-
 
 
 def main():
