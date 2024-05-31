@@ -446,17 +446,28 @@ def camera_func():
         uploaded_image = st.camera_input("Scan QR code or barcode")
         
         if uploaded_image is not None:
-            # Convert uploaded image to NumPy array
+            # Convert uploaded image to PIL image and NumPy array
             pil_image = Image.open(uploaded_image)
             numpy_image = np.array(pil_image)
 
-            st.image(pil_image, use_column_width = True)
-            st.image(numpy_image, use_column_width = True)
+            # Display the captured image
+            st.image(pil_image, use_column_width=True)
+
+            # Enhance the image
+            enhancer = ImageEnhance.Contrast(pil_image)
+            enhanced_image = enhancer.enhance(2)
+            enhanced_numpy_image = np.array(enhanced_image)
 
             # Convert to grayscale
-            gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
-            st.image(gray, use_column_width = True)
-            decoded_objects = decode(gray)
+            gray = cv2.cvtColor(enhanced_numpy_image, cv2.COLOR_RGB2GRAY)
+            st.image(gray, use_column_width=True, caption="Grayscale Image")
+
+            # Apply thresholding
+            _, thresholded_image = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+            st.image(thresholded_image, use_column_width=True, caption="Thresholded Image")
+
+            # Decode the barcode
+            decoded_objects = decode(thresholded_image)
             st.write(decoded_objects)
 
             if decoded_objects:
@@ -472,7 +483,6 @@ def camera_func():
             session_state.scan_button_clicked = False
 
     return None
-
 
 
 def main():
