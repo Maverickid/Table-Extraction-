@@ -353,6 +353,12 @@ def check_databases(df, scanned_data, check_column="Any", display_column=None):
 
 #     return None
 
+def sharpen_image(image):
+    # Apply an unsharp mask to the image
+    gaussian_blur = cv2.GaussianBlur(image, (0, 0), 3)
+    sharpened = cv2.addWeighted(image, 1.5, gaussian_blur, -0.5, 0)
+    return sharpened
+
 def extract_barcode_data(image):
     # Use OpenCV's QR code detector as a fallback
     qr_detector = cv2.QRCodeDetector()
@@ -372,8 +378,12 @@ def detect_qr_code(image):
 def detect_and_crop_barcode(image):
     st.write("Detecting barcode using contours...")
 
+    # Sharpen the image
+    sharpened_image = sharpen_image(image)
+    st.image(sharpened_image, use_column_width=True, caption="Sharpened Image")
+
     # Convert the image to grayscale and apply edge detection
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(sharpened_image, cv2.COLOR_BGR2GRAY)
     edged = cv2.Canny(gray, 50, 200)
 
     # Find contours in the edged image
@@ -387,7 +397,7 @@ def detect_and_crop_barcode(image):
         
         # Assume a barcode has a rectangular shape with an aspect ratio between 2 and 6
         if 2 <= aspect_ratio <= 6 and w > 100 and h > 20:  # Adjust width and height thresholds as needed
-            cropped_image = image[y:y+h, x:x+w]
+            cropped_image = sharpened_image[y:y+h, x:x+w]
             st.image(cropped_image, caption="Cropped Image for Barcode Detection")
             
             # Attempt to decode cropped region using pyzbar
