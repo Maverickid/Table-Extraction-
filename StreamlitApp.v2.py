@@ -420,13 +420,19 @@ def check_databases(df, scanned_data, check_column="Any", display_column=None):
 #     return None
 
 def extract_barcode_data(image):
-    # Use pyzbar to detect barcode's bounding box
-    decoded_objects = decode(image)
+    # Use OpenCV's barcode detector
+    barcode_detector = cv2.barcode_BarcodeDetector()
+    ok, decoded_info, decoded_type, corners = barcode_detector.detectAndDecode(image)
     
-    # Extract the first detected barcode
-    if decoded_objects:
-        barcode_data = decoded_objects[0].data.decode("utf-8")
-        return barcode_data
+    if ok:
+        return decoded_info[0]  # Return the first decoded barcode data
+    
+    # Use OpenCV's QR code detector
+    qr_detector = cv2.QRCodeDetector()
+    data, bbox, straight_qrcode = qr_detector.detectAndDecode(image)
+    
+    if data:
+        return data  # Return the QR code data
     
     return None
 
@@ -446,7 +452,7 @@ def camera_func():
         
         if uploaded_image is not None:
             # Convert uploaded image to NumPy array
-            pil_image = Image.fromarray(uploaded_image)
+            pil_image = Image.open(uploaded_image)
             numpy_image = np.array(pil_image)
 
             # Convert to grayscale
@@ -454,7 +460,6 @@ def camera_func():
             st.image(gray, use_column_width=True, caption="Grayscale Image")
 
             barcode_data = extract_barcode_data(gray)
-            st.write(barcode_data)
             if barcode_data:
                 st.success(f"Barcode Data: {barcode_data}")
                 session_state.scan_button_clicked = False
@@ -468,6 +473,7 @@ def camera_func():
             session_state.scan_button_clicked = False
 
     return None
+
 
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
