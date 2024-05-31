@@ -195,7 +195,7 @@ def delete_table_from_sqlite(table_name):
     cursor.close()
 
 # Initialize PaddleOCR
-ocr = PaddleOCR(use_gpu=False, use_angle_cls=True, lang="en",enable_mlkdnn=True)
+ocr = PaddleOCR(use_gpu=False, use_angle_cls=True, lang="en")
 
 # Function to extract text within a polygon
 def extract_text_within_polygon(results, polygon, pad1=0, pad2=0, target_size=(200, 200)):
@@ -495,7 +495,7 @@ def camera_func():
             session_state.scan_button_clicked = False
 
     return None
-    
+model = TableTransformerForObjectDetection.from_pretrained("microsoft/table-transformer-structure-recognition")    
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
                 
@@ -546,7 +546,7 @@ def main():
                 ocr_results = ocr.ocr(enhanced_image_np)
                 feature_extractor = DetrImageProcessor()
                 encoding = feature_extractor(image, return_tensors="pt")
-                model = TableTransformerForObjectDetection.from_pretrained("microsoft/table-transformer-structure-recognition")
+                
 
                 with torch.no_grad():
                     outputs = model(**encoding)
