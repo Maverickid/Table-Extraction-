@@ -195,7 +195,15 @@ def delete_table_from_sqlite(table_name):
     cursor.close()
 
 # Initialize PaddleOCR
-ocr = PaddleOCR(use_gpu=False, use_angle_cls=True, lang="en")
+# ocr = PaddleOCR(use_gpu=False, use_angle_cls=True, lang="en")
+@st.cache(allow_output_mutation=True)
+def load_ppocr_model():
+    # Load the OCR model
+    ocr = PaddleOCR(use_gpu=False,
+        use_angle_cls=True,
+        lang="en"
+    )
+    return ocr
 
 # Function to extract text within a polygon
 def extract_text_within_polygon(results, polygon, pad1=0, pad2=0, target_size=(200, 200)):
@@ -541,7 +549,7 @@ def main():
 
                 # Resize the image
                 resized_image = enhanced_image.resize((int(width * 0.9), int(height * 0.9)))
-
+                ocr = load_ppocr_model()
                 # Perform object detection
                 ocr_results = ocr.ocr(enhanced_image_np)
                 feature_extractor = DetrImageProcessor()
