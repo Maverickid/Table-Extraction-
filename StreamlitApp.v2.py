@@ -205,6 +205,20 @@ def load_ppocr_model():
     )
     return ocr
 
+@st.cache_resource
+def load_table_transformer_model():
+    model_name = "microsoft/table-transformer-structure-recognition"
+    model = TableTransformerForObjectDetection.from_pretrained(model_name)
+    feature_extractor = DetrImageProcessor.from_pretrained(model_name)
+    return model, feature_extractor
+
+
+def process_image_with_model(image, feature_extractor, model):
+    encoding = feature_extractor(image, return_tensors="pt")
+    with torch.no_grad():
+        outputs = model(**encoding)
+    return outputs
+
 # Function to extract text within a polygon
 def extract_text_within_polygon(results, polygon, pad1=0, pad2=0, target_size=(200, 200)):
     extracted_texts = []
@@ -503,7 +517,7 @@ def camera_func():
             session_state.scan_button_clicked = False
 
     return None
-model = TableTransformerForObjectDetection.from_pretrained("microsoft/table-transformer-structure-recognition")    
+
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
                 
@@ -552,26 +566,26 @@ def main():
                 ocr = load_ppocr_model()
                 # Perform object detection
                 ocr_results = ocr.ocr(enhanced_image_np)
-                feature_extractor = DetrImageProcessor()
-                encoding = feature_extractor(image, return_tensors="pt")
-                
-
-                with torch.no_grad():
-                    outputs = model(**encoding)
-
+                 # Load the model and feature extractor once
+                model, feature_extractor = load_table_transformer_model()
+    
+                # Perform object detection using the model
+                outputs = process_image_with_model(enhanced_image_np, feature_extractor, model)
+    
+                # Process the outputs
                 target_sizes = [image.size[::-1]]
                 results = feature_extractor.post_process_object_detection(outputs, threshold=0.7, target_sizes=[(height, width)])[0]
                 label_dict = model.config.id2label
                 labels_boxes_dict = {}
-
+    
                 for label, box in zip(results['labels'], results['boxes']):
                     label_name = label_dict[label.item()]
                     if label_name not in labels_boxes_dict:
                         labels_boxes_dict[label_name] = []
                     labels_boxes_dict[label_name].append(box.tolist())
-
-                column_boxes = labels_boxes_dict['table column']
-                row_boxes = labels_boxes_dict['table row']
+    
+                column_boxes = labels_boxes_dict.get('table column', [])
+                row_boxes = labels_boxes_dict.get('table row', [])
                 df = extract_columns_and_display_excel(ocr_results, resized_image, row_boxes, column_boxes)
                 st.session_state.df = df
 
