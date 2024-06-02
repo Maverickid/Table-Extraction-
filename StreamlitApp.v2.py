@@ -201,7 +201,8 @@ def load_ppocr_model():
     # Load the OCR model
     ocr = PaddleOCR(use_gpu=False,
         use_angle_cls=False,
-        lang="en"
+        lang="en",
+        enable_mkldnn=True
     )
     return ocr
 
