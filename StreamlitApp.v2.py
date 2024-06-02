@@ -209,7 +209,7 @@ def load_ppocr_model():
 def load_table_transformer_model():
     model_name = "microsoft/table-transformer-structure-recognition"
     model = TableTransformerForObjectDetection.from_pretrained(model_name)
-    feature_extractor = DetrImageProcessor.from_pretrained(model_name)
+    feature_extractor = DetrImageProcessor
     return model, feature_extractor
 
 
