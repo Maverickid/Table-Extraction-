@@ -4,7 +4,7 @@ import streamlit as st
 from PIL import Image, ImageEnhance
 import cv2
 import torch
-from transformers import DetrImageProcessor, TableTransformerForObjectDetection
+from transformers import DetrFeatureExtractor, TableTransformerForObjectDetection
 from paddleocr import PaddleOCR
 from shapely.geometry import Polygon, Point
 import sqlite3
@@ -209,7 +209,7 @@ def load_ppocr_model():
 def load_table_transformer_model():
     model_name = "microsoft/table-transformer-structure-recognition"
     model = TableTransformerForObjectDetection.from_pretrained(model_name)
-    feature_extractor = DetrImageProcessor
+    feature_extractor = DetrFeatureExtractor
     return model, feature_extractor
 
 
