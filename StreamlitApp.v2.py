@@ -196,7 +196,7 @@ def delete_table_from_sqlite(table_name):
 
 # Initialize PaddleOCR
 # ocr = PaddleOCR(use_gpu=False, use_angle_cls=True, lang="en")
-@st.cache(allow_output_mutation=True)
+@@st.cache_resource
 def load_ppocr_model():
     # Load the OCR model
     ocr = PaddleOCR(use_gpu=False,
