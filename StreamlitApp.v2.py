@@ -567,9 +567,9 @@ def main():
 
                 # Resize the image
                 resized_image = enhanced_image.resize((int(width * 0.9), int(height * 0.9)))
-                ocr = load_ppocr_model()
+                thing = load_ppocr_model()
                 # Perform object detection
-                ocr_results = ocr.ocr(enhanced_image_np)
+                ocr_results = thing.ocr(enhanced_image_np)
                  # Load the model and feature extractor once
                 model, feature_extractor = load_table_transformer_model()
     
