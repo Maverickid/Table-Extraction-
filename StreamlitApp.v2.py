@@ -207,10 +207,14 @@ def load_ppocr_model():
 
 @st.cache_resource
 def load_table_transformer_model():
-    model_name = "microsoft/table-transformer-structure-recognition"
-    model = TableTransformerForObjectDetection.from_pretrained(model_name)
-    feature_extractor = DetrFeatureExtractor
-    return model, feature_extractor
+    try:
+        model_name = "microsoft/table-transformer-structure-recognition"
+        model = TableTransformerForObjectDetection.from_pretrained(model_name)
+        feature_extractor = DetrFeatureExtractor.from_pretrained(model_name)
+        return model, feature_extractor
+    except Exception as e:
+        st.error(f"Failed to load Table Transformer model: {e}")
+        return None, None
 
 
 def process_image_with_model(image, feature_extractor, model):
