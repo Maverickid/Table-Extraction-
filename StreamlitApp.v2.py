@@ -199,9 +199,14 @@ def delete_table_from_sqlite(table_name):
 @st.cache_resource
 def load_ppocr_model():
     # Load the OCR model
-    ocr = PaddleOCR(use_gpu=False,
+    ocr = PaddleOCR(
+        use_gpu=False,
+        det=False,
+        det_model_dir='/var/task/whl/det/en/en_PP-OCRv3_det_infer/',
+        rec_model_dir='/var/task/whl/rec/en/en_PP-OCRv3_rec_infer/',
+        cls_model_dir='/var/task/whl/cls/en/ch_ppocr_mobile_v2.0_cls_infer/', 
         use_angle_cls=True,
-        lang="en"
+        lang='en'
     )
     return ocr
 
