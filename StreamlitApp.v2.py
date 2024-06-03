@@ -608,7 +608,7 @@ def main():
     
                 # Resize the cropped image
                 width, height = cropped_image.size
-                resized_image = cropped_image.resize((int(width * 0.9), int(height * 0.9)))
+                resized_image = cropped_image.resize((int(width * 0.75), int(height * 0.75)))
     
                 # Convert the resized image to numpy array
                 resized_image_np = np.array(resized_image)
