@@ -199,12 +199,7 @@ def delete_table_from_sqlite(table_name):
 @st.cache_resource
 def load_ppocr_model():
     # Load the OCR model
-    ocr = PaddleOCR(
-        use_gpu=False,
-        use_angle_cls=True,
-        lang='en'
-    )
-    return ocr
+    return PaddleOCR(use_gpu=False, use_angle_cls=True, lang='en')
 
 # Function to load the Table Transformer Detection model
 @st.cache_resource
