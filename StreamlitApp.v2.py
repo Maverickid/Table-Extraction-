@@ -662,11 +662,11 @@ def main():
                 except Exception as e:
                     st.error(f"Error processing Excel file: {e}")
 
-            st.subheader("Save DataFrame to Database")
-            table_name_to_save = st.text_input("Enter table name to save")
-            if st.button("Save DataFrame"):
-                if table_name_to_save:
-                    save_dataframe_to_sqlite(df, table_name_to_save)
+        st.subheader("Save DataFrame to Database")
+        table_name_to_save = st.text_input("Enter table name to save")
+        if st.button("Save DataFrame"):
+            if table_name_to_save:
+                save_dataframe_to_sqlite(df, table_name_to_save)
 
     elif operation == "Retrieve Table":
         table_name_to_retrieve = st.selectbox("Select Table Name to Retrieve", options=table_names)
