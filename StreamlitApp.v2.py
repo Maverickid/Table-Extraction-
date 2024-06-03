@@ -219,7 +219,7 @@ def load_table_transformer_detection_model():
         return None, None
 
 @st.cache_resource
-def load_table_transformer_model():
+def load_table_transformer_structure_model():
     try:
         model_name = "microsoft/table-transformer-structure-recognition"
         model = TableTransformerForObjectDetection.from_pretrained(model_name)
