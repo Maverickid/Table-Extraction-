@@ -4,7 +4,7 @@ import streamlit as st
 from PIL import Image, ImageEnhance
 import cv2
 import torch
-from transformers import DetrFeatureExtractor, TableTransformerForObjectDetection
+from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 from paddleocr import PaddleOCR
 from shapely.geometry import Polygon, Point
 import sqlite3
@@ -206,12 +206,24 @@ def load_ppocr_model():
     )
     return ocr
 
+# Function to load the Table Transformer Detection model
+@st.cache_resource
+def load_table_transformer_detection_model():
+    try:    
+        model_name = "microsoft/table-transformer-detection"
+        model = DetrForObjectDetection.from_pretrained(model_name)
+        feature_extractor = DetrImageProcessor.from_pretrained(model_name)
+        return model, feature_extractor
+    except Exception as e:
+        st.error(f"Failed to load Table Transformer model: {e}")
+        return None, None
+
 @st.cache_resource
 def load_table_transformer_model():
     try:
         model_name = "microsoft/table-transformer-structure-recognition"
         model = TableTransformerForObjectDetection.from_pretrained(model_name)
-        feature_extractor = DetrFeatureExtractor.from_pretrained(model_name)
+        feature_extractor = DetrImageProcessor.from_pretrained(model_name)
         return model, feature_extractor
     except Exception as e:
         st.error(f"Failed to load Table Transformer model: {e}")
@@ -223,6 +235,27 @@ def process_image_with_model(image, feature_extractor, model):
     with torch.no_grad():
         outputs = model(**encoding)
     return outputs
+
+# Function to crop the table from the image
+def crop_table_from_image(image, outputs, feature_extractor):
+    target_sizes = [image.size[::-1]]
+    results = feature_extractor.post_process_object_detection(outputs, threshold=0.7, target_sizes=target_sizes)[0]
+    label_dict = model.config.id2label
+    table_boxes = []
+
+    for label, box in zip(results['labels'], results['boxes']):
+        label_name = label_dict[label.item()]
+        if label_name == "table":
+            table_boxes.append(box.tolist())
+
+    if table_boxes:
+        # Assuming the first detected table is the one we want to crop
+        box = table_boxes[0]
+        x_min, y_min, x_max, y_max = map(int, box)
+        cropped_image = image.crop((x_min, y_min, x_max, y_max))
+        return cropped_image
+    else:
+        return image  # If no table is detected, return the original image
 
 # Function to extract text within a polygon
 def extract_text_within_polygon(results, polygon, pad1=0, pad2=0, target_size=(200, 200)):
@@ -563,24 +596,36 @@ def main():
                 # Convert the enhanced image to grayscale using OpenCV
                 enhanced_image_np = np.array(enhanced_image)
 
-                # Get image dimensions
-                width, height = image.size
-
-                # Resize the image
-                resized_image = enhanced_image.resize((int(width * 0.9), int(height * 0.9)))
-                thing = load_ppocr_model()
-                # Perform object detection
-                ocr_results = thing.ocr(enhanced_image_np)
-                 # Load the model and feature extractor once
-                model, feature_extractor = load_table_transformer_model()
+                     # Load the detection model and feature extractor
+                detection_model, detection_feature_extractor = load_table_transformer_detection_model()
     
                 # Perform object detection using the model
-                outputs = process_image_with_model(enhanced_image_np, feature_extractor, model)
+                detection_outputs = process_image_with_model(enhanced_image_np, detection_feature_extractor, detection_model)
     
-                # Process the outputs
+                # Crop the table from the image
+                cropped_image = crop_table_from_image(enhanced_image, detection_outputs, detection_feature_extractor)
+    
+                # Resize the cropped image
+                width, height = cropped_image.size
+                resized_image = cropped_image.resize((int(width * 0.9), int(height * 0.9)))
+    
+                # Convert the resized image to numpy array
+                resized_image_np = np.array(resized_image)
+    
+                # Perform OCR on the resized image
+                ocr = load_ppocr_model()
+                ocr_results = ocr.ocr(resized_image_np)
+    
+                # Load the structure recognition model and feature extractor
+                structure_model, structure_feature_extractor = load_table_transformer_structure_model()
+    
+                # Perform structure recognition using the model
+                structure_outputs = process_image_with_model(resized_image_np, structure_feature_extractor, structure_model)
+    
+                # Process the outputs for structure recognition
                 target_sizes = [image.size[::-1]]
-                results = feature_extractor.post_process_object_detection(outputs, threshold=0.7, target_sizes=[(height, width)])[0]
-                label_dict = model.config.id2label
+                results = structure_feature_extractor.post_process_object_detection(structure_outputs, threshold=0.7, target_sizes=[(height, width)])[0]
+                label_dict = structure_model.config.id2label
                 labels_boxes_dict = {}
     
                 for label, box in zip(results['labels'], results['boxes']):
@@ -591,23 +636,22 @@ def main():
     
                 column_boxes = labels_boxes_dict.get('table column', [])
                 row_boxes = labels_boxes_dict.get('table row', [])
+    
                 df = extract_columns_and_display_excel(ocr_results, resized_image, row_boxes, column_boxes)
                 st.session_state.df = df
-
+    
             elif uploaded_file.type == "text/csv":
                 try:
                     df = pd.read_csv(uploaded_file, index_col=None)
-                    # df.reset_index(drop=True, inplace=True)
                     st.session_state.df = df
                     st.subheader("Uploaded CSV File")
                     st.dataframe(df)
                 except Exception as e:
                     st.error(f"Error processing CSV file: {e}")
-
+    
             elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
                 try:
                     df = pd.read_excel(uploaded_file, index_col=None)
-                    # df.reset_index(drop=True, inplace=True)
                     st.session_state.df = df
                     st.subheader("Uploaded Excel File")
                     st.dataframe(df)
