@@ -591,7 +591,7 @@ def main():
 
                 # Apply sharpness enhancement
                 enhancer = ImageEnhance.Sharpness(image)
-                enhanced_image = enhancer.enhance(3)  # Adjust the factor as needed to control sharpness
+                enhanced_image = enhancer.enhance(2)  # Adjust the factor as needed to control sharpness
 
                 # Convert the enhanced image to grayscale using OpenCV
                 enhanced_image_np = np.array(enhanced_image)
@@ -608,7 +608,7 @@ def main():
     
                 # Resize the cropped image
                 width, height = cropped_image.size
-                resized_image = cropped_image.resize((int(width * 0.95), int(height * 0.95)))
+                resized_image = cropped_image.resize((int(width * 1), int(height * 1)))
     
                 # Convert the resized image to numpy array
                 resized_image_np = np.array(resized_image)
