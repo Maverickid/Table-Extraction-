@@ -660,7 +660,6 @@ def main():
                     df_to_save = st.session_state.df
                     if df_to_save is not None:
                         save_dataframe_to_sqlite(df_to_save, table_name_to_save)
-                        st.success(f"DataFrame saved to table {table_name_to_save}.")
                     else:
                         st.error("No DataFrame to save.")
 
