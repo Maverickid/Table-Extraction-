@@ -578,9 +578,10 @@ def main():
             st.session_state.manipulated_df = None
         if 'formula' not in st.session_state:
             st.session_state.formula = ""
-
+        
        
         if uploaded_file is not None:
+            
             if uploaded_file.type in ["image/jpeg", "image/png", "image/jpg"]:
                 # Process image and extract DataFrame
                 image = Image.open(uploaded_file).convert("RGB")
@@ -600,7 +601,11 @@ def main():
 
                 # Perform OCR on the resized image
                 ocr = load_ppocr_model()
-                ocr_results = ocr.ocr(resized_image_np)
+                try:
+                    ocr_results = ocr.ocr(resized_image_np)
+                except Exception as e:
+                    st.error(f"OCR failed: {e}")
+                    return
 
                 # Load the structure recognition model and feature extractor
                 structure_model, structure_feature_extractor = load_table_transformer_structure_model()
