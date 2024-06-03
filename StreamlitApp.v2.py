@@ -652,17 +652,17 @@ def main():
                 except Exception as e:
                     st.error(f"Error processing Excel file: {e}")
 
-        # Save DataFrame to Database
-        st.subheader("Save DataFrame to Database")
-        table_name_to_save = st.text_input("Enter table name to save")
-        if st.button("Save DataFrame"):
-            if table_name_to_save:
-                df_to_save = st.session_state.df
-                if df_to_save is not None:
-                    save_dataframe_to_sqlite(df_to_save, table_name_to_save)
-                    st.success(f"DataFrame saved to table {table_name_to_save}.")
-                else:
-                    st.error("No DataFrame to save.")
+            # Save DataFrame to Database
+            st.subheader("Save DataFrame to Database")
+            table_name_to_save = st.text_input("Enter table name to save")
+            if st.button("Save DataFrame"):
+                if table_name_to_save:
+                    df_to_save = st.session_state.df
+                    if df_to_save is not None:
+                        save_dataframe_to_sqlite(df_to_save, table_name_to_save)
+                        st.success(f"DataFrame saved to table {table_name_to_save}.")
+                    else:
+                        st.error("No DataFrame to save.")
 
     elif operation == "Retrieve Table":
         table_name_to_retrieve = st.selectbox("Select Table Name to Retrieve", options=table_names)
