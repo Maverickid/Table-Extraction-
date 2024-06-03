@@ -314,7 +314,7 @@ def extract_columns_and_display_excel(results, image, row_boxes, column_boxes):
     
     df = pd.DataFrame(column_data)
     df_correctedfordtypes = convert_dataframe_dtypes(df)
-    st.dataframe(df_correctedfordtypes)  # Display DataFrame
+    # st.dataframe(df_correctedfordtypes)  # Display DataFrame
     return df_correctedfordtypes
 
 # Function to check databases for corresponding column value
