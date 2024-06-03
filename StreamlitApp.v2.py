@@ -4,7 +4,7 @@ import streamlit as st
 from PIL import Image, ImageEnhance
 import cv2
 import torch
-from transformers import DetrImageProcessor, TableTransformerForObjectDetection
+from transformers import DetrImageProcessor, DetrForObjectDetection, TableTransformerForObjectDetection
 from paddleocr import PaddleOCR
 from shapely.geometry import Polygon, Point
 import sqlite3
