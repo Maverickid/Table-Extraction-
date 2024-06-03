@@ -584,66 +584,56 @@ def main():
         if 'formula' not in st.session_state:
             st.session_state.formula = ""
 
+       
         if uploaded_file is not None:
             if uploaded_file.type in ["image/jpeg", "image/png", "image/jpg"]:
-                # Load the image
+                # Process image and extract DataFrame
                 image = Image.open(uploaded_file).convert("RGB")
-
-                # Apply sharpness enhancement
                 enhancer = ImageEnhance.Sharpness(image)
                 enhanced_image = enhancer.enhance(2)  # Adjust the factor as needed to control sharpness
-
-                # Convert the enhanced image to grayscale using OpenCV
                 enhanced_image_np = np.array(enhanced_image)
 
-                     # Load the detection model and feature extractor
+                # Load the detection model and feature extractor
                 detection_model, detection_feature_extractor = load_table_transformer_detection_model()
-    
-                # Perform object detection using the model
                 detection_outputs = process_image_with_model(enhanced_image_np, detection_feature_extractor, detection_model)
-    
-                # Crop the table from the image
-                # cropped_image = crop_table_from_image(enhanced_image, detection_outputs, detection_feature_extractor, detection_model)
                 cropped_image = enhanced_image
-    
+
                 # Resize the cropped image
                 width, height = cropped_image.size
                 resized_image = cropped_image.resize((int(width * 1), int(height * 1)))
-    
-                # Convert the resized image to numpy array
                 resized_image_np = np.array(resized_image)
-    
+
                 # Perform OCR on the resized image
                 ocr = load_ppocr_model()
                 ocr_results = ocr.ocr(resized_image_np)
-    
+
                 # Load the structure recognition model and feature extractor
                 structure_model, structure_feature_extractor = load_table_transformer_structure_model()
-                
                 if structure_model is None or structure_feature_extractor is None:
                     st.error("Failed to load the Table Transformer Structure Recognition model.")
                     return
-                # Perform structure recognition using the model
                 structure_outputs = process_image_with_model(resized_image_np, structure_feature_extractor, structure_model)
-    
+
                 # Process the outputs for structure recognition
                 target_sizes = [image.size[::-1]]
                 results = structure_feature_extractor.post_process_object_detection(structure_outputs, threshold=0.7, target_sizes=[(height, width)])[0]
                 label_dict = structure_model.config.id2label
                 labels_boxes_dict = {}
-    
+
                 for label, box in zip(results['labels'], results['boxes']):
                     label_name = label_dict[label.item()]
                     if label_name not in labels_boxes_dict:
                         labels_boxes_dict[label_name] = []
                     labels_boxes_dict[label_name].append(box.tolist())
-    
+
                 column_boxes = labels_boxes_dict.get('table column', [])
                 row_boxes = labels_boxes_dict.get('table row', [])
-    
+
                 df = extract_columns_and_display_excel(ocr_results, resized_image, row_boxes, column_boxes)
-                st.session_state.df = df
-    
+                st.session_state.df = df  # Store the DataFrame in the session state
+                st.subheader("Extracted DataFrame")
+                st.dataframe(df)
+
             elif uploaded_file.type == "text/csv":
                 try:
                     df = pd.read_csv(uploaded_file, index_col=None)
@@ -652,7 +642,7 @@ def main():
                     st.dataframe(df)
                 except Exception as e:
                     st.error(f"Error processing CSV file: {e}")
-    
+
             elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
                 try:
                     df = pd.read_excel(uploaded_file, index_col=None)
@@ -662,11 +652,17 @@ def main():
                 except Exception as e:
                     st.error(f"Error processing Excel file: {e}")
 
+        # Save DataFrame to Database
         st.subheader("Save DataFrame to Database")
         table_name_to_save = st.text_input("Enter table name to save")
         if st.button("Save DataFrame"):
             if table_name_to_save:
-                save_dataframe_to_sqlite(df, table_name_to_save)
+                df_to_save = st.session_state.df
+                if df_to_save is not None:
+                    save_dataframe_to_sqlite(df_to_save, table_name_to_save)
+                    st.success(f"DataFrame saved to table {table_name_to_save}.")
+                else:
+                    st.error("No DataFrame to save.")
 
     elif operation == "Retrieve Table":
         table_name_to_retrieve = st.selectbox("Select Table Name to Retrieve", options=table_names)
