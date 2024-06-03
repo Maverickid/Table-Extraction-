@@ -237,25 +237,25 @@ def process_image_with_model(image, feature_extractor, model):
     return outputs
 
 # Function to crop the table from the image
-def crop_table_from_image(image, outputs, feature_extractor,model):
-    target_sizes = [image.size[::-1]]
-    results = feature_extractor.post_process_object_detection(outputs, threshold=0.7, target_sizes=target_sizes)[0]
-    label_dict = model.config.id2label
-    table_boxes = []
+# def crop_table_from_image(image, outputs, feature_extractor,model):
+#     target_sizes = [image.size[::-1]]
+#     results = feature_extractor.post_process_object_detection(outputs, threshold=0.7, target_sizes=target_sizes)[0]
+#     label_dict = model.config.id2label
+#     table_boxes = []
 
-    for label, box in zip(results['labels'], results['boxes']):
-        label_name = label_dict[label.item()]
-        if label_name == "table":
-            table_boxes.append(box.tolist())
+#     for label, box in zip(results['labels'], results['boxes']):
+#         label_name = label_dict[label.item()]
+#         if label_name == "table":
+#             table_boxes.append(box.tolist())
 
-    if table_boxes:
-        # Assuming the first detected table is the one we want to crop
-        box = table_boxes[0]
-        x_min, y_min, x_max, y_max = map(int, box)
-        cropped_image = image.crop((x_min, y_min, x_max, y_max))
-        return cropped_image
-    else:
-        return image  # If no table is detected, return the original image
+#     if table_boxes:
+#         # Assuming the first detected table is the one we want to crop
+#         box = table_boxes[0]
+#         x_min, y_min, x_max, y_max = map(int, box)
+#         cropped_image = image.crop((x_min, y_min, x_max, y_max))
+#         return cropped_image
+#     else:
+#         return image  # If no table is detected, return the original image
 
 # Function to extract text within a polygon
 def extract_text_within_polygon(results, polygon, pad1=0, pad2=0, target_size=(200, 200)):
@@ -603,7 +603,8 @@ def main():
                 detection_outputs = process_image_with_model(enhanced_image_np, detection_feature_extractor, detection_model)
     
                 # Crop the table from the image
-                cropped_image = crop_table_from_image(enhanced_image, detection_outputs, detection_feature_extractor, detection_model)
+                # cropped_image = crop_table_from_image(enhanced_image, detection_outputs, detection_feature_extractor, detection_model)
+                cropped_image = enhanced_image
     
                 # Resize the cropped image
                 width, height = cropped_image.size
