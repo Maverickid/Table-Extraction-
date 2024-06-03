@@ -237,7 +237,7 @@ def process_image_with_model(image, feature_extractor, model):
     return outputs
 
 # Function to crop the table from the image
-def crop_table_from_image(image, outputs, feature_extractor):
+def crop_table_from_image(image, outputs, feature_extractor,model):
     target_sizes = [image.size[::-1]]
     results = feature_extractor.post_process_object_detection(outputs, threshold=0.7, target_sizes=target_sizes)[0]
     label_dict = model.config.id2label
@@ -603,7 +603,7 @@ def main():
                 detection_outputs = process_image_with_model(enhanced_image_np, detection_feature_extractor, detection_model)
     
                 # Crop the table from the image
-                cropped_image = crop_table_from_image(enhanced_image, detection_outputs, detection_feature_extractor)
+                cropped_image = crop_table_from_image(enhanced_image, detection_outputs, detection_feature_extractor, detection_model)
     
                 # Resize the cropped image
                 width, height = cropped_image.size
@@ -618,7 +618,10 @@ def main():
     
                 # Load the structure recognition model and feature extractor
                 structure_model, structure_feature_extractor = load_table_transformer_structure_model()
-    
+                
+                if structure_model is None or structure_feature_extractor is None:
+                    st.error("Failed to load the Table Transformer Structure Recognition model.")
+                    return
                 # Perform structure recognition using the model
                 structure_outputs = process_image_with_model(resized_image_np, structure_feature_extractor, structure_model)
     
