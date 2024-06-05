@@ -602,7 +602,7 @@ def main():
                 # Perform OCR on the resized image
                 ocr = load_ppocr_model()
                 try:
-                    ocr_results = ocr.ocr(resized_image_np)
+                    ocr_results = ocr.ocr(resized_image_np, cls=False)
                 except Exception as e:
                     st.error(f"OCR failed: {e}")
                     return
