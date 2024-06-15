@@ -512,44 +512,44 @@ def check_databases(df, scanned_data, check_column="Any", display_column=None):
 
 #     return None
 
+# Barcode detection class for WebRTC
+class BarcodeDetector:
+    def __init__(self):
+        self.barcode_val = None
+        self.barcode_detected = False
+
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        barcodes = decode(img)
+        for barcode in barcodes:
+            x, y, w, h = barcode.rect
+            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            barcode_info = barcode.data.decode('utf-8')
+            cv2.putText(img, barcode_info, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            self.barcode_val = barcode_info
+            self.barcode_detected = True
+            st.session_state.barcode_val = barcode_info  # Update the session state
+
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
+
 def camera_func():
-    # Create or get the SessionState
-    session_state = st.session_state
-    if 'scan_button_clicked' not in session_state:
-        session_state.scan_button_clicked = False
+    st.session_state.barcode_val = None
 
-    if st.button("Scan"):
-        session_state.scan_button_clicked = True
-        st.write("Please upload an image of the barcode.")
+    barcode_detector = BarcodeDetector()
 
-    if session_state.scan_button_clicked:
-        # Allow user to upload an image
-        uploaded_image = st.file_uploader("Upload Image", type=['png', 'jpg', 'jpeg'])
+    webrtc_streamer(
+        key="barcode-scanner",
+        mode=WebRtcMode.SENDRECV,
+        rtc_configuration=RTC_CONFIGURATION,
+        media_stream_constraints={"video": True, "audio": False},
+        video_processor_factory=lambda: barcode_detector,
+        async_processing=True,
+    )
 
-        if uploaded_image is not None:
-            # Convert uploaded image to NumPy array
-            pil_image = Image.open(uploaded_image)
-            numpy_image = np.array(pil_image)
+    while st.session_state.barcode_val is None:
+        time.sleep(0.1)  # Wait for barcode detection
 
-            # Convert to grayscale
-            gray = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2GRAY)
-            st.image(gray, use_column_width=True, caption="Grayscale Image")
-
-            # Decode barcode using pyzbar
-            decoded_objects = decode(gray)
-            if decoded_objects:
-                scanned_data = decoded_objects[0].data.decode("utf-8")
-                session_state.scan_button_clicked = False
-                return scanned_data
-            else:
-                st.info("No barcode detected in the uploaded image.")
-                session_state.scan_button_clicked = False
-
-        stop_scanning = st.button("Stop Scanning")
-        if stop_scanning:
-            session_state.scan_button_clicked = False
-
-    return None
+    return st.session_state.barcode_val
 
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
