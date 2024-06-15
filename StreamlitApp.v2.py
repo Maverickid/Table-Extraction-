@@ -517,7 +517,6 @@ def check_databases(df, scanned_data, check_column="Any", display_column=None):
 class BarcodeDetector:
     def __init__(self):
         self.barcode_val = None
-        self.barcode_detected = False
 
     def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
@@ -528,7 +527,6 @@ class BarcodeDetector:
             barcode_info = barcode.data.decode('utf-8')
             cv2.putText(img, barcode_info, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             self.barcode_val = barcode_info
-            self.barcode_detected = True
             st.session_state.barcode_val = barcode_info  # Update the session state
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
@@ -547,10 +545,7 @@ def camera_func():
         async_processing=True,
     )
 
-    while st.session_state.barcode_val is None:
-        time.sleep(0.1)  # Wait for barcode detection
-
-    return st.session_state.barcode_val
+    return barcode_detector
 
 def main():
     st.set_page_config(page_title="Table Extraction with OCR", layout="wide")
@@ -743,7 +738,12 @@ def main():
                 selected_search_column = st.selectbox("Select Column to Search", options=search_options)
                 selected_display_column = st.selectbox("Select Column to Display", options=display_options)
 
-                scanned_data = camera_func()
+                barcode_detector = camera_func()
+                
+                while st.session_state.barcode_val is None:
+                time.sleep(0.01)  # Small delay to prevent excessive CPU usage
+
+                scanned_data = st.session_state.barcode_val
                 if scanned_data:
                     st.success(f"Scanned Data: {scanned_data}")
                     result = check_databases(df_to_scan, scanned_data, selected_search_column, selected_display_column)
