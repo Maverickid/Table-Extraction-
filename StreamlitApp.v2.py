@@ -518,7 +518,8 @@ class BarcodeDetector:
     def __init__(self):
         self.barcode_val = None
 
-    def recv(self, frame):
+    async def recv(self):
+        frame = await webrtc_ctx.recv()
         img = frame.to_ndarray(format="bgr24")
         barcodes = decode(img)
         for barcode in barcodes:
@@ -526,8 +527,16 @@ class BarcodeDetector:
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
             barcode_info = barcode.data.decode('utf-8')
             cv2.putText(img, barcode_info, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            # Check databases and display result on the top left corner of the frame
+            result = check_databases(df_to_scan, barcode_info)
+            cv2.putText(img, f"Result: {result}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            
+            
             self.barcode_val = barcode_info
             st.session_state.barcode_val = barcode_info  # Update the session state
+
+            
+
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
@@ -535,7 +544,7 @@ def camera_func():
     st.session_state.barcode_val = None
 
     barcode_detector = BarcodeDetector()
-
+    
     webrtc_streamer(
         key="barcode-scanner",
         mode=WebRtcMode.SENDRECV,
@@ -740,15 +749,15 @@ def main():
 
                 barcode_detector = camera_func()
                 
-                while st.session_state.barcode_val is None:
-                    time.sleep(0.01)  # Small delay to prevent excessive CPU usage
+                # while st.session_state.barcode_val is None:
+                #     time.sleep(0.01)  # Small delay to prevent excessive CPU usage
 
-                scanned_data = st.session_state.barcode_val
-                if scanned_data:
-                    st.success(f"Scanned Data: {scanned_data}")
-                    result = check_databases(df_to_scan, scanned_data, selected_search_column, selected_display_column)
-                    st.subheader("Database Check Result")
-                    st.write(f"Value: {result}")
+                # scanned_data = st.session_state.barcode_val
+                # if scanned_data:
+                #     st.success(f"Scanned Data: {scanned_data}")
+                #     result = check_databases(df_to_scan, scanned_data, selected_search_column, selected_display_column)
+                #     st.subheader("Database Check Result")
+                #     st.write(f"Value: {result}")
 
 if __name__ == "__main__":
     main()
