@@ -13,6 +13,7 @@ from pyzbar.pyzbar import decode
 import os
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration,  WebRtcMode
 import av
+import time
 
 RTC_CONFIGURATION = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
 # Connect to the SQLite3 database
