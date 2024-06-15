@@ -741,7 +741,7 @@ def main():
                 barcode_detector = camera_func()
                 
                 while st.session_state.barcode_val is None:
-                time.sleep(0.01)  # Small delay to prevent excessive CPU usage
+                    time.sleep(0.01)  # Small delay to prevent excessive CPU usage
 
                 scanned_data = st.session_state.barcode_val
                 if scanned_data:
