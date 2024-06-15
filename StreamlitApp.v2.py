@@ -518,8 +518,7 @@ class BarcodeDetector:
     def __init__(self):
         self.barcode_val = None
 
-    async def recv(self):
-        frame = await webrtc_ctx.recv()
+    async def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
         barcodes = decode(img)
         for barcode in barcodes:
